@@ -7,20 +7,20 @@ const instance = axios.create({
 })
 
 const usersAPI = {
-    async getUsersPosts(): Promise<PostWithUserId[]> {
-        let posts = (await instance.get<PostResponse[]>(`posts`)).data
-        return posts.map(p => postConverter(p))
+    async getPosts(): Promise<PostWithUserId[]> {
+        return (await instance.get<PostResponse[]>(`posts`)).data.map(p => convertPost(p))
+
     },
     async getUsers(): Promise<User[]> {
-        return (await instance.get<UserResponse[]>(`users`).then(response => response.data)).map(u => userConverter(u))
+        return (await instance.get<UserResponse[]>(`users`)).data.map(u => convertUser(u))
     },
-    getComments(postId: number): Promise<Comment[]> {
-        return instance.get<Comment[]>(`posts/${postId}/comments`).then(response => response.data)
+    async getComments(postId: number): Promise<Comment[]> {
+        return (await instance.get<Comment[]>(`posts/${postId}/comments`)).data
     },
 }
 
 
-function userConverter(user: UserResponse): User {
+function convertUser(user: UserResponse): User {
     return {
         id: user.id,
         name: user.name,
@@ -32,7 +32,7 @@ function userConverter(user: UserResponse): User {
     }
 }
 
-function postConverter(post: PostResponse): PostWithUserId {
+function convertPost(post: PostResponse): PostWithUserId {
     let title_crop = post.title.substring(0, 20) + '...'
     return {
         userId: post.userId,
@@ -64,9 +64,9 @@ function addPostsToUsers(users: User[], posts: PostWithUserId[]): User[] {
     })
 }
 
-async function showNewUsersWithPost() {
+async function showNewUsersWithPosts() {
     let users = await usersAPI.getUsers()
-    let posts = await usersAPI.getUsersPosts()
+    let posts = await usersAPI.getPosts()
 
     let usersWithPosts = addPostsToUsers(users, posts)
 
@@ -76,4 +76,4 @@ async function showNewUsersWithPost() {
     console.log(inspect(usersWithPosts, { showHidden: false, depth: null, colors: true }))
 }
 
-showNewUsersWithPost()
+showNewUsersWithPosts()
